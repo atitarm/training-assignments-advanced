@@ -212,7 +212,7 @@ public class Uniform extends ShaderVariable {
 
         
         setByCurrentMaterial = true;
-
+// test sintu
         switch (type){
             case Matrix3:
 			matrix3Test(value);
