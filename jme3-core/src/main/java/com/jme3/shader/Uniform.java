@@ -210,59 +210,21 @@ public class Uniform extends ShaderVariable {
             throw new IllegalArgumentException("for uniform " + name + ": value cannot be null");
         }
 
+        
         setByCurrentMaterial = true;
 
         switch (type){
             case Matrix3:
-                if (value.equals(this.value)) {
-                    return;
-                }
-                Matrix3f m3 = (Matrix3f) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(9);
-                }
-                m3.fillFloatBuffer(multiData, true);
-                multiData.clear();
-                if (this.value == null) {
-                    this.value = new Matrix3f(m3);
-                } else {
-                    ((Matrix3f)this.value).set(m3);
-                }
+			matrix3Test(value);
                 break;
             case Matrix4:
-                if (value.equals(this.value)) {
-                    return;
-                }
-                Matrix4f m4 = (Matrix4f) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(16);
-                }
-                m4.fillFloatBuffer(multiData, true);
-                multiData.clear();
-                if (this.value == null) {
-                    this.value = new Matrix4f(m4);
-                } else {
-                    ((Matrix4f)this.value).copy(m4);
-                }
+			matrix4Test(value);
                 break;
             case IntArray:
-                int[] ia = (int[]) value;
-                if (this.value == null) {
-                    this.value = BufferUtils.createIntBuffer(ia);
-                } else {
-                    this.value = BufferUtils.ensureLargeEnough((IntBuffer)this.value, ia.length);
-                }
-                ((IntBuffer)this.value).clear();
+			intArrayTest(value);
                 break;
             case FloatArray:
-                float[] fa = (float[]) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(fa);
-                } else {
-                    multiData = BufferUtils.ensureLargeEnough(multiData, fa.length);
-                }
-                multiData.put(fa);
-                multiData.clear();
+			floatArray(value);
                 break;
             case Vector2Array:
                 Vector2f[] v2a = (Vector2f[]) value;
@@ -386,6 +348,61 @@ public class Uniform extends ShaderVariable {
         varType = type;
         updateNeeded = true;
     }
+
+	private void floatArray(Object value) {
+		float[] fa = (float[]) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(fa);
+		} else {
+		    multiData = BufferUtils.ensureLargeEnough(multiData, fa.length);
+		}
+		multiData.put(fa);
+		multiData.clear();
+	}
+
+	private void intArrayTest(Object value) {
+		int[] ia = (int[]) value;
+		if (this.value == null) {
+		    this.value = BufferUtils.createIntBuffer(ia);
+		} else {
+		    this.value = BufferUtils.ensureLargeEnough((IntBuffer)this.value, ia.length);
+		}
+		((IntBuffer)this.value).clear();
+	}
+
+	private void matrix4Test(Object value) {
+		if (value.equals(this.value)) {
+		    return;
+		}
+		Matrix4f m4 = (Matrix4f) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(16);
+		}
+		m4.fillFloatBuffer(multiData, true);
+		multiData.clear();
+		if (this.value == null) {
+		    this.value = new Matrix4f(m4);
+		} else {
+		    ((Matrix4f)this.value).copy(m4);
+		}
+	}
+
+	private void matrix3Test(Object value) {
+		if (value.equals(this.value)) {
+		    return;
+		}
+		Matrix3f m3 = (Matrix3f) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(9);
+		}
+		m3.fillFloatBuffer(multiData, true);
+		multiData.clear();
+		if (this.value == null) {
+		    this.value = new Matrix3f(m3);
+		} else {
+		    ((Matrix3f)this.value).set(m3);
+		}
+	}
 
     public void setVector4Length(int length){
         if (location == -1) {
