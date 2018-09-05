@@ -305,15 +305,21 @@ public class Uniform extends ShaderVariable {
 		}
 	}
 
-	private void vektor2(Object value) {
+	private void vektor2(Object value, Object name) {
 		if (value.equals(this.value)) {
 		    return;
 		}
 		if (this.value == null) {
-		    this.value = new Vector2f((Vector2f) value);
+		    this.value = new name((name) value);
 		} else {
-		    ((Vector2f) this.value).set((Vector2f) value);
+		    ((name) this.value).set((name) value);
 		}
+		
+//		if (this.value == null) {
+//		    this.value = new Vector2f((Vector2f) value);
+//		} else {
+//		    ((Vector2f) this.value).set((Vector2f) value);
+//		}
 	}
 
 	private void matrix4Array(Object value) {
