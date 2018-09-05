@@ -212,120 +212,43 @@ public class Uniform extends ShaderVariable {
 
         
         setByCurrentMaterial = true;
-// test sintu
+
         switch (type){
             case Matrix3:
-			matrix3Test(value);
+            	matrix3Test(value);
                 break;
             case Matrix4:
-			matrix4Test(value);
+            	matrix4Test(value);
                 break;
             case IntArray:
-			intArrayTest(value);
+            	intArrayTest(value);
                 break;
             case FloatArray:
-			floatArray(value);
+            	floatArray(value);
                 break;
             case Vector2Array:
-                Vector2f[] v2a = (Vector2f[]) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(v2a);
-                } else {
-                    multiData = BufferUtils.ensureLargeEnough(multiData, v2a.length * 2);
-                }
-                for (int i = 0; i < v2a.length; i++) {
-                    BufferUtils.setInBuffer(v2a[i], multiData, i);
-                }
-                multiData.clear();
+            	vektor2Array(value);
                 break;
             case Vector3Array:
-                Vector3f[] v3a = (Vector3f[]) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(v3a);
-                } else {
-                    multiData = BufferUtils.ensureLargeEnough(multiData, v3a.length * 3);
-                }
-                for (int i = 0; i < v3a.length; i++) {
-                    BufferUtils.setInBuffer(v3a[i], multiData, i);
-                }
-                multiData.clear();
+            	vektor3Array(value);
                 break;
             case Vector4Array:
-                Vector4f[] v4a = (Vector4f[]) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(v4a);
-                } else {
-                    multiData = BufferUtils.ensureLargeEnough(multiData, v4a.length * 4);
-                }
-                for (int i = 0; i < v4a.length; i++) {
-                    BufferUtils.setInBuffer(v4a[i], multiData, i);
-                }
-                multiData.clear();
+            	vektor4Array(value);
                 break;
             case Matrix3Array:
-                Matrix3f[] m3a = (Matrix3f[]) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(m3a.length * 9);
-                } else {
-                    multiData = BufferUtils.ensureLargeEnough(multiData, m3a.length * 9);
-                }
-                for (int i = 0; i < m3a.length; i++) {
-                    m3a[i].fillFloatBuffer(multiData, true);
-                }
-                multiData.clear();
+            	marix3Array(value);
                 break;
             case Matrix4Array:
-                Matrix4f[] m4a = (Matrix4f[]) value;
-                if (multiData == null) {
-                    multiData = BufferUtils.createFloatBuffer(m4a.length * 16);
-                } else {
-                    multiData = BufferUtils.ensureLargeEnough(multiData, m4a.length * 16);
-                }
-                for (int i = 0; i < m4a.length; i++) {
-                    m4a[i].fillFloatBuffer(multiData, true);
-                }
-                multiData.clear();
+            	matrix4Array(value);
                 break;
             case Vector2:
-                if (value.equals(this.value)) {
-                    return;
-                }
-                if (this.value == null) {
-                    this.value = new Vector2f((Vector2f) value);
-                } else {
-                    ((Vector2f) this.value).set((Vector2f) value);
-                }
+            	vektor2(value);
                 break;
             case Vector3:
-                if (value.equals(this.value)) {
-                    return;
-                }
-                if (this.value == null) {
-                    this.value = new Vector3f((Vector3f) value);
-                } else {
-                    ((Vector3f) this.value).set((Vector3f) value);
-                }
+            	vektor3(value);
                 break;
             case Vector4:
-                if (value.equals(this.value)) {
-                    return;
-                }
-                if (value instanceof ColorRGBA) {
-                    if (this.value == null) {
-                        this.value = new ColorRGBA();
-                    }
-                    ((ColorRGBA) this.value).set((ColorRGBA) value);
-                } else if (value instanceof Vector4f) {
-                    if (this.value == null) {
-                        this.value = new Vector4f();
-                    }
-                    ((Vector4f) this.value).set((Vector4f) value);
-                } else {
-                    if (this.value == null) {
-                        this.value = new Quaternion();
-                    }
-                    ((Quaternion) this.value).set((Quaternion) value);
-                }
+            	vektor4(value);
                 break;
                 // Only use check if equals optimization for primitive values
             case Int:
@@ -348,6 +271,115 @@ public class Uniform extends ShaderVariable {
         varType = type;
         updateNeeded = true;
     }
+
+	private void vektor4(Object value) {
+		if (value.equals(this.value)) {
+		    return;
+		}
+		if (value instanceof ColorRGBA) {
+		    if (this.value == null) {
+		        this.value = new ColorRGBA();
+		    }
+		    ((ColorRGBA) this.value).set((ColorRGBA) value);
+		} else if (value instanceof Vector4f) {
+		    if (this.value == null) {
+		        this.value = new Vector4f();
+		    }
+		    ((Vector4f) this.value).set((Vector4f) value);
+		} else {
+		    if (this.value == null) {
+		        this.value = new Quaternion();
+		    }
+		    ((Quaternion) this.value).set((Quaternion) value);
+		}
+	}
+
+	private void vektor3(Object value) {
+		if (value.equals(this.value)) {
+		    return;
+		}
+		if (this.value == null) {
+		    this.value = new Vector3f((Vector3f) value);
+		} else {
+		    ((Vector3f) this.value).set((Vector3f) value);
+		}
+	}
+
+	private void vektor2(Object value) {
+		if (value.equals(this.value)) {
+		    return;
+		}
+		if (this.value == null) {
+		    this.value = new Vector2f((Vector2f) value);
+		} else {
+		    ((Vector2f) this.value).set((Vector2f) value);
+		}
+	}
+
+	private void matrix4Array(Object value) {
+		Matrix4f[] m4a = (Matrix4f[]) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(m4a.length * 16);
+		} else {
+		    multiData = BufferUtils.ensureLargeEnough(multiData, m4a.length * 16);
+		}
+		for (int i = 0; i < m4a.length; i++) {
+		    m4a[i].fillFloatBuffer(multiData, true);
+		}
+		multiData.clear();
+	}
+
+	private void marix3Array(Object value) {
+		Matrix3f[] m3a = (Matrix3f[]) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(m3a.length * 9);
+		} else {
+		    multiData = BufferUtils.ensureLargeEnough(multiData, m3a.length * 9);
+		}
+		for (int i = 0; i < m3a.length; i++) {
+		    m3a[i].fillFloatBuffer(multiData, true);
+		}
+		multiData.clear();
+	}
+
+	private void vektor4Array(Object value) {
+		Vector4f[] v4a = (Vector4f[]) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(v4a);
+		} else {
+		    multiData = BufferUtils.ensureLargeEnough(multiData, v4a.length * 4);
+		}
+		for (int i = 0; i < v4a.length; i++) {
+		    BufferUtils.setInBuffer(v4a[i], multiData, i);
+		}
+		multiData.clear();
+	}
+
+	private void vektor3Array(Object value) {
+		Vector3f[] v3a = (Vector3f[]) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(v3a);
+		} else {
+		    multiData = BufferUtils.ensureLargeEnough(multiData, v3a.length * 3);
+		}
+		for (int i = 0; i < v3a.length; i++) {
+		    BufferUtils.setInBuffer(v3a[i], multiData, i);
+		}
+		multiData.clear();
+	}
+
+	private void vektor2Array(Object value) {
+		Vector2f[] v2a = (Vector2f[]) value;
+		if (multiData == null) {
+		    multiData = BufferUtils.createFloatBuffer(v2a);
+		} else {
+		    multiData = BufferUtils.ensureLargeEnough(multiData, v2a.length * 2);
+		}
+		for (int i = 0; i < v2a.length; i++) {
+		    BufferUtils.setInBuffer(v2a[i], multiData, i);
+		}
+		multiData.clear();
+	}
 
 	private void floatArray(Object value) {
 		float[] fa = (float[]) value;
