@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  * @author Mark Powell
  * @author Joshua Slack
  */
-public final class Vector3f implements Savable, Cloneable, java.io.Serializable {
+public final class Vector3f  extends Vector {
 
     static final long serialVersionUID = 1;
     

@@ -32,7 +32,6 @@
 package com.jme3.math;
 
 import com.jme3.export.*;
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -44,7 +43,7 @@ import java.util.logging.Logger;
  * @author Mark Powell
  * @author Joshua Slack
  */
-public final class Vector2f implements Savable, Cloneable, java.io.Serializable {
+public final class Vector2f extends Vector {
 
     static final long serialVersionUID = 1;
     private static final Logger logger = Logger.getLogger(Vector2f.class.getName());

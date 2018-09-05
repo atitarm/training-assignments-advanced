@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  * @author Mark Powell
  * @author Joshua Slack
  */
-public final class Vector implements Savable, Cloneable, java.io.Serializable {
+public class Vector implements Savable, Cloneable, java.io.Serializable {
 
     static final long serialVersionUID = 1;
     private static final Logger logger = Logger.getLogger(Vector.class.getName());

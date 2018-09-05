@@ -42,6 +42,8 @@ public class Uniform extends ShaderVariable {
     private static final Integer ZERO_INT = 0;
     private static final Float ZERO_FLT = Float.valueOf(0);
     private static final FloatBuffer ZERO_BUF = BufferUtils.createFloatBuffer(4*4);
+    private static final Integer FLOAT_BUFFER_MATRIX_3 = 9;
+	private static final Integer FLOAT_BUFFER_MATRIX_4 = 16;
 
     /**
      * Currently set value of the uniform.
@@ -242,17 +244,14 @@ public class Uniform extends ShaderVariable {
             	matrix4Array(value);
                 break;
             case Vector2:
-            	vektor2(value);
+            	vektor2(value, Vector2f); // not aan te passen
                 break;
             case Vector3:
-            	vektor3(value);
+            	vektor(value, Vector3f);// not aan te passen
                 break;
             case Vector4:
             	vektor4(value);
                 break;
-                // Only use check if equals optimization for primitive values
-            case Int:
-            case Float:
             case Boolean:
                 if (value.equals(this.value)) {
                     return;
@@ -264,10 +263,6 @@ public class Uniform extends ShaderVariable {
                 break;
         }
 
-//        if (multiData != null) {
-//            this.value = multiData;
-//        }
-
         varType = type;
         updateNeeded = true;
     }
@@ -276,6 +271,7 @@ public class Uniform extends ShaderVariable {
 		if (value.equals(this.value)) {
 		    return;
 		}
+		
 		if (value instanceof ColorRGBA) {
 		    if (this.value == null) {
 		        this.value = new ColorRGBA();
@@ -294,33 +290,21 @@ public class Uniform extends ShaderVariable {
 		}
 	}
 
-	private void vektor3(Object value) {
+	private <T> void vektor(Object value, Class<T> clasName) {
 		if (value.equals(this.value)) {
 		    return;
 		}
 		if (this.value == null) {
-		    this.value = new Vector3f((Vector3f) value);
+		    this.value = new clasName((clasName) value);
 		} else {
 		    ((Vector3f) this.value).set((Vector3f) value);
 		}
 	}
 
-	private void vektor2(Object value, Object name) {
-		if (value.equals(this.value)) {
-		    return;
-		}
-		if (this.value == null) {
-		    this.value = new name((name) value);
-		} else {
-		    ((name) this.value).set((name) value);
-		}
-		
-//		if (this.value == null) {
-//		    this.value = new Vector2f((Vector2f) value);
-//		} else {
-//		    ((Vector2f) this.value).set((Vector2f) value);
-//		}
-	}
+// Sintu: hi Meryem, wij moeten nog even naar kijken hoe wij dynamisch class naam gebruiken in vektor method. ik heb nu wat verzonnen.
+	
+	
+	// alle array methoden hieronder kunnen samengevoegd worden, 1 of 2 methoden dus.
 
 	private void matrix4Array(Object value) {
 		Matrix4f[] m4a = (Matrix4f[]) value;
@@ -334,7 +318,7 @@ public class Uniform extends ShaderVariable {
 		}
 		multiData.clear();
 	}
-
+	
 	private void marix3Array(Object value) {
 		Matrix3f[] m3a = (Matrix3f[]) value;
 		if (multiData == null) {
@@ -408,13 +392,14 @@ public class Uniform extends ShaderVariable {
 		((IntBuffer)this.value).clear();
 	}
 
+	// wij kunnen volgende 2 methoden 1 van maken
 	private void matrix4Test(Object value) {
 		if (value.equals(this.value)) {
 		    return;
 		}
 		Matrix4f m4 = (Matrix4f) value;
 		if (multiData == null) {
-		    multiData = BufferUtils.createFloatBuffer(16);
+		    multiData = BufferUtils.createFloatBuffer(FLOAT_BUFFER_MATRIX_4);
 		}
 		m4.fillFloatBuffer(multiData, true);
 		multiData.clear();
@@ -424,14 +409,14 @@ public class Uniform extends ShaderVariable {
 		    ((Matrix4f)this.value).copy(m4);
 		}
 	}
-
+	
 	private void matrix3Test(Object value) {
 		if (value.equals(this.value)) {
 		    return;
 		}
 		Matrix3f m3 = (Matrix3f) value;
 		if (multiData == null) {
-		    multiData = BufferUtils.createFloatBuffer(9);
+		    multiData = BufferUtils.createFloatBuffer(FLOAT_BUFFER_MATRIX_3);
 		}
 		m3.fillFloatBuffer(multiData, true);
 		multiData.clear();
