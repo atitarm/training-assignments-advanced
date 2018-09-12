@@ -670,7 +670,7 @@ public class TangentBinormalGenerator {
         
         return vertexMap;
     }
-    
+    //Begin van refactoring
     private static void processTriangleData(Mesh mesh, List<VertexData> vertices,
             boolean approxTangent, boolean splitMirrored) {
         ArrayList<VertexInfo> vertexMap = linkVertices(mesh,splitMirrored);
@@ -694,123 +694,25 @@ public class TangentBinormalGenerator {
             float wCoord = -1;
 
             VertexInfo vertexInfo = vertexMap.get(k);
-
             givenNormal.set(vertexInfo.normal);
             givenNormal.normalizeLocal();
-
+            //new method
             TriangleData firstTriangle = vertices.get(vertexInfo.indices.get(0)).triangles.get(0);
 
-            // check tangent and binormal consistency
-            tangent.set(firstTriangle.tangent);
-            tangent.normalizeLocal();
-            binormal.set(firstTriangle.binormal);
-            binormal.normalizeLocal();
+            // check tangent and binormal consistency (new method)
+            checkTangent(vertices, approxTangent, tangent, binormal, tangentUnit, binormalUnit, vertexInfo,
+					firstTriangle);
 
-            for (int i : vertexInfo.indices) {
-                ArrayList<TriangleData> triangles = vertices.get(i).triangles;
-
-                for (int j = 0; j < triangles.size(); j++) {
-                    TriangleData triangleData = triangles.get(j);
-
-                    tangentUnit.set(triangleData.tangent);
-                    tangentUnit.normalizeLocal();
-                    if (tangent.dot(tangentUnit) < toleranceDot) {
-                        log.log(Level.WARNING,
-                                "Angle between tangents exceeds tolerance "
-                                + "for vertex {0}.", i);
-                        break;
-                    }
-
-                    if (!approxTangent) {
-                        binormalUnit.set(triangleData.binormal);
-                        binormalUnit.normalizeLocal();
-                        if (binormal.dot(binormalUnit) < toleranceDot) {
-                            log.log(Level.WARNING,
-                                    "Angle between binormals exceeds tolerance "
-                                    + "for vertex {0}.", i);
-                            break;
-                        }
-                    }
-                }
-            }
-
-
-            // find average tangent
-            tangent.set(0, 0, 0);
-            binormal.set(0, 0, 0);
-
-            int triangleCount = 0;
-            for (int i : vertexInfo.indices) {
-                ArrayList<TriangleData> triangles = vertices.get(i).triangles;
-                triangleCount += triangles.size();
-                if (debug) {
-                    cols[i] = ColorRGBA.White;
-                }
-
-                for (int j = 0; j < triangles.size(); j++) {
-                    TriangleData triangleData = triangles.get(j);
-                    tangent.addLocal(triangleData.tangent);
-                    binormal.addLocal(triangleData.binormal);
-
-                }
-            }
-
-
+            // find average tangent (New method)
+            int triangleCount = findAverage(vertices, cols, tangent, binormal, vertexInfo);
             int blameVertex = vertexInfo.indices.get(0);
 
-            if (tangent.length() < ZERO_TOLERANCE) {
-                log.log(Level.WARNING,
-                        "Shared tangent is zero for vertex {0}.", blameVertex);
-                // attempt to fix from binormal
-                if (binormal.length() >= ZERO_TOLERANCE) {
-                    binormal.cross(givenNormal, tangent);
-                    tangent.normalizeLocal();
-                } // if all fails use the tangent from the first triangle
-                else {
-                    tangent.set(firstTriangle.tangent);
-                }
-            } else {
-                tangent.divideLocal(triangleCount);
-            }
-
-            tangentUnit.set(tangent);
-            tangentUnit.normalizeLocal();
-            if (Math.abs(Math.abs(tangentUnit.dot(givenNormal)) - 1)
-                    < ZERO_TOLERANCE) {
-                log.log(Level.WARNING,
-                        "Normal and tangent are parallel for vertex {0}.", blameVertex);
-            }
-
+            checkTangent(tangent, binormal, givenNormal, tangentUnit, firstTriangle, triangleCount, blameVertex);
 
             if (!approxTangent) {
-                if (binormal.length() < ZERO_TOLERANCE) {
-                    log.log(Level.WARNING,
-                            "Shared binormal is zero for vertex {0}.", blameVertex);
-                    // attempt to fix from tangent
-                    if (tangent.length() >= ZERO_TOLERANCE) {
-                        givenNormal.cross(tangent, binormal);
-                        binormal.normalizeLocal();
-                    } // if all fails use the binormal from the first triangle
-                    else {
-                        binormal.set(firstTriangle.binormal);
-                    }
-                } else {
-                    binormal.divideLocal(triangleCount);
-                }
-
-                binormalUnit.set(binormal);
-                binormalUnit.normalizeLocal();
-                if (Math.abs(Math.abs(binormalUnit.dot(givenNormal)) - 1)
-                        < ZERO_TOLERANCE) {
-                    log.log(Level.WARNING,
-                            "Normal and binormal are parallel for vertex {0}.", blameVertex);
-                }
-
-                if (Math.abs(Math.abs(binormalUnit.dot(tangentUnit)) - 1)
-                        < ZERO_TOLERANCE) {
-                    log.log(Level.WARNING,
-                            "Tangent and binormal are parallel for vertex {0}.", blameVertex);
-                }
+        	
+                fixTangent(tangent, binormal, givenNormal, tangentUnit, binormalUnit, firstTriangle, triangleCount,
+						blameVertex);
             }
 
             Vector3f finalTangent = new Vector3f();
@@ -856,7 +758,125 @@ public class TangentBinormalGenerator {
         }
         mesh.updateBound();
         mesh.updateCounts();
-    }    
+    }
+
+	private static void fixTangent(Vector3f tangent, Vector3f binormal, Vector3f givenNormal, Vector3f tangentUnit,
+			Vector3f binormalUnit, TriangleData firstTriangle, int triangleCount, int blameVertex) {
+		if (binormal.length() < ZERO_TOLERANCE) {
+		    log.log(Level.WARNING,
+		            "Shared binormal is zero for vertex {0}.", blameVertex);
+		    // attempt to fix from tangent
+		    if (tangent.length() >= ZERO_TOLERANCE) {
+		        givenNormal.cross(tangent, binormal);
+		        binormal.normalizeLocal();
+		    } // if all fails use the binormal from the first triangle
+		    else {
+		        binormal.set(firstTriangle.binormal);
+		    }
+		} else {
+		    binormal.divideLocal(triangleCount);
+		}
+
+		binormalUnit.set(binormal);
+		binormalUnit.normalizeLocal();
+		if (Math.abs(Math.abs(binormalUnit.dot(givenNormal)) - 1)
+		        < ZERO_TOLERANCE) {
+		    log.log(Level.WARNING,
+		            "Normal and binormal are parallel for vertex {0}.", blameVertex);
+		}
+
+		if (Math.abs(Math.abs(binormalUnit.dot(tangentUnit)) - 1)
+		        < ZERO_TOLERANCE) {
+		    log.log(Level.WARNING,
+		            "Tangent and binormal are parallel for vertex {0}.", blameVertex);
+		}
+	}
+
+	private static void checkTangent(Vector3f tangent, Vector3f binormal, Vector3f givenNormal, Vector3f tangentUnit,
+			TriangleData firstTriangle, int triangleCount, int blameVertex) {
+		if (tangent.length() < ZERO_TOLERANCE) {
+		    log.log(Level.WARNING,
+		            "Shared tangent is zero for vertex {0}.", blameVertex);
+		    // attempt to fix from binormal
+		    if (binormal.length() >= ZERO_TOLERANCE) {
+		        binormal.cross(givenNormal, tangent);
+		        tangent.normalizeLocal();
+		    } // if all fails use the tangent from the first triangle
+		    else {
+		        tangent.set(firstTriangle.tangent);
+		    }
+		} else {
+		    tangent.divideLocal(triangleCount);
+		}
+
+		tangentUnit.set(tangent);
+		tangentUnit.normalizeLocal();
+		if (Math.abs(Math.abs(tangentUnit.dot(givenNormal)) - 1)
+		        < ZERO_TOLERANCE) {
+		    log.log(Level.WARNING,
+		            "Normal and tangent are parallel for vertex {0}.", blameVertex);
+		}
+	}
+
+	private static int findAverage(List<VertexData> vertices, ColorRGBA[] cols, Vector3f tangent, Vector3f binormal,
+			VertexInfo vertexInfo) {
+		tangent.set(0, 0, 0);
+		binormal.set(0, 0, 0);
+
+		int triangleCount = 0;
+		for (int i : vertexInfo.indices) {
+		    ArrayList<TriangleData> triangles = vertices.get(i).triangles;
+		    triangleCount += triangles.size();
+		    if (debug) {
+		        cols[i] = ColorRGBA.White;
+		    }
+
+		    for (int j = 0; j < triangles.size(); j++) {
+		        TriangleData triangleData = triangles.get(j);
+		        tangent.addLocal(triangleData.tangent);
+		        binormal.addLocal(triangleData.binormal);
+
+		    }
+		}
+		return triangleCount;
+	}
+
+	private static void checkTangent(List<VertexData> vertices, boolean approxTangent, Vector3f tangent,
+			Vector3f binormal, Vector3f tangentUnit, Vector3f binormalUnit, VertexInfo vertexInfo,
+			TriangleData firstTriangle) {
+		tangent.set(firstTriangle.tangent);
+		tangent.normalizeLocal();
+		binormal.set(firstTriangle.binormal);
+		binormal.normalizeLocal();
+
+		for (int i : vertexInfo.indices) {
+		    ArrayList<TriangleData> triangles = vertices.get(i).triangles;
+
+		    for (int j = 0; j < triangles.size(); j++) {
+		        TriangleData triangleData = triangles.get(j);
+
+		        tangentUnit.set(triangleData.tangent);
+		        tangentUnit.normalizeLocal();
+		        if (tangent.dot(tangentUnit) < toleranceDot) {
+		            log.log(Level.WARNING,
+		                    "Angle between tangents exceeds tolerance "
+		                    + "for vertex {0}.", i);
+		            break;
+		        }
+
+		        if (!approxTangent) {
+		            binormalUnit.set(triangleData.binormal);
+		            binormalUnit.normalizeLocal();
+		            if (binormal.dot(binormalUnit) < toleranceDot) {
+		                log.log(Level.WARNING,
+		                        "Angle between binormals exceeds tolerance "
+		                        + "for vertex {0}.", i);
+		                break;
+		            }
+		        }
+		    }
+		}
+	}    
     
     private static void writeColorBuffer(List<VertexData> vertices, ColorRGBA[] cols, Mesh mesh) {
         FloatBuffer colors = BufferUtils.createFloatBuffer(vertices.size() * 4);
