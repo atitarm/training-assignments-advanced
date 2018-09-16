@@ -151,9 +151,8 @@ public class LineSegment implements Cloneable, Savable, java.io.Serializable {
             s1 = negativeDirectionDot * diffThisDot - diffTestDot;
             extentDeterminant0 = extent * determinant;
             extentDeterminant1 = test.getExtent() * determinant;
-
-            if (s0 >= -extentDeterminant0) {
-                if (s0 <= extentDeterminant0 && isEqualOrBetween(s1, extentDeterminant1)) { // region 0 (interior)
+            
+                if (isEqualOrBetween(s0, extentDeterminant0) && isEqualOrBetween(s1, extentDeterminant1)) { // region 0 (interior)
                     // minimum at two interior points of 3D lines
                     float inverseDeterminant = ((float) 1.0)
                             / determinant;
@@ -164,13 +163,13 @@ public class LineSegment implements Cloneable, Savable, java.io.Serializable {
                             + s1
                             * (negativeDirectionDot * s0 + s1 + (2.0f) * diffTestDot)
                             + lengthOfDiff;                            
-                } else if (s0 <= extentDeterminant0 && s1 > extentDeterminant1) { // region 3 (side)
+                } else if (isEqualOrBetween(s0, extentDeterminant0) && s1 > extentDeterminant1) { // region 3 (side)
                     s1 = test.getExtent();
                     squareDistance = regionSide3and7(negativeDirectionDot, diffThisDot, diffTestDot, lengthOfDiff, s1);
-                } else if(s0 <= extentDeterminant0) { // region 7 (side)
+                } else if(isEqualOrBetween(s0, extentDeterminant0)) { // region 7 (side)
                     s1 = -test.getExtent();
                     squareDistance = regionSide3and7(negativeDirectionDot, diffThisDot, diffTestDot, lengthOfDiff, s1);
-                } else {
+                } else if(s0 >= -extentDeterminant0) {
                     if (isEqualOrBetween(s1, extentDeterminant1)) { // region 1 (side)
                         s0 = extent;
                         squareDistance = regionSide1or5(test, negativeDirectionDot, diffThisDot, diffTestDot, lengthOfDiff, s0);
@@ -181,7 +180,6 @@ public class LineSegment implements Cloneable, Savable, java.io.Serializable {
                         s1 = -test.getExtent();
                         squareDistance = regionCorner8(test, negativeDirectionDot, diffThisDot, diffTestDot, lengthOfDiff, s1);
                     }
-                }
             } else {
                 if (isEqualOrBetween(s1, extentDeterminant1)){ // region 5 (side)
                     s0 = -extent;
