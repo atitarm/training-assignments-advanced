@@ -731,7 +731,7 @@ final public class FastMath {
         return a2.crossLocal(a1).normalizeLocal();
     }
     
-    public static void printDeterminant() {
+    public static void determinant() {
     	double matrixA[][] = {
     							{9, 8, 7, 1,},
 								{6, 5, 4, 9,},
