@@ -730,25 +730,18 @@ final public class FastMath {
         Vector3f a2 = v3.subtract(v2);
         return a2.crossLocal(a1).normalizeLocal();
     }
-
-    /**
-     * Returns the determinant of a 4x4 matrix.
-     */
-    public static float determinant(double m00, double m01, double m02,
-            double m03, double m10, double m11, double m12, double m13,
-            double m20, double m21, double m22, double m23, double m30,
-            double m31, double m32, double m33) {
-
-        double det01 = m20 * m31 - m21 * m30;
-        double det02 = m20 * m32 - m22 * m30;
-        double det03 = m20 * m33 - m23 * m30;
-        double det12 = m21 * m32 - m22 * m31;
-        double det13 = m21 * m33 - m23 * m31;
-        double det23 = m22 * m33 - m23 * m32;
-        return (float) (m00 * (m11 * det23 - m12 * det13 + m13 * det12) - m01
-                * (m10 * det23 - m12 * det03 + m13 * det02) + m02
-                * (m10 * det13 - m11 * det03 + m13 * det01) - m03
-                * (m10 * det12 - m11 * det02 + m12 * det01));
+    
+    public static void printDeterminant() {
+    	double matrixA[][] = {
+    							{9, 8, 7, 1,},
+								{6, 5, 4, 9,},
+								{3, 2, 1, 8,},
+								{2, 1, 6, 3,},
+    						};
+    	
+    	Determinant determinant = new Determinant(matrixA);
+    	
+    	System.out.println(determinant);
     }
 
     /**
