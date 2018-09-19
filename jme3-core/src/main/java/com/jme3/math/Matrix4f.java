@@ -130,7 +130,7 @@ public final class Matrix4f implements Savable, Cloneable, java.io.Serializable 
      * @param matrix
      *            the matrix to copy.
      */
-    public void copy(Matrix4f matrix) {
+    /*public void copy(Matrix4f matrix) {
         if (null == matrix) {
             loadIdentity();
         } else {
@@ -151,7 +151,15 @@ public final class Matrix4f implements Savable, Cloneable, java.io.Serializable 
             m32 = matrix.m32;
             m33 = matrix.m33;
         }
+    }*/
+    public void copy(Matrix4f matrix) {
+        if (null == matrix) {
+            loadIdentity();
+        } else {
+        	matrix=set(matrix);
+        }
     }
+    
 
     public void fromFrame(Vector3f location, Vector3f direction, Vector3f up, Vector3f left) {
         TempVars vars = TempVars.get();
