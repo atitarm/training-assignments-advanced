@@ -53,6 +53,25 @@ import java.util.logging.Logger;
  * @author Mark Powell
  * @author Joshua Slack
  */
+
+
+/		
+package com.jme3.math;
+import org.la4j.matrix.*;
+/*
+for guideline 5, source code: 
+
+//MatrixA and MatrixB
+double[][] matrixA = new double[3][3];
+double[][] matrixB = new double[3][3];
+    	
+// add function
+Matrix matrixS=new Matrix();
+matrixS=from2DArray(matrixA).add(from2DArray(matrixB));
+
+// multiply function	
+matrixS=from2DArray(matrixA).multiply(from2DArray(matrixB));
+*/
 public final class Matrix4f implements Savable, Cloneable, java.io.Serializable {
 
     static final long serialVersionUID = 1;

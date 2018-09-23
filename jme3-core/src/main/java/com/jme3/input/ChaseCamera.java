@@ -381,11 +381,167 @@ public class ChaseCamera implements ActionListener, AnalogListener, Control, Jme
             }
         }
     }
-
-    /**
-     * Updates the camera, should only be called internally
-     */
     protected void updateCamera(float tpf) {
+        if (enabled) {
+            targetLocation.set(target.getWorldTranslation()).addLocal(lookAtOffset);
+            if (smoothMotion) {
+                smothMotionUpdate(tpf);
+                computePosition();
+                cam.setLocation(pos.addLocal(lookAtOffset));
+            } else {           
+                noSmothMotionUpdate();
+                computePosition();
+                cam.setLocation(pos.addLocal(lookAtOffset));
+            }
+           
+            prevPos.set(targetLocation);
+            cam.lookAt(targetLocation, initialUpVec);
+        }
+    }
+
+	private void noSmothMotionUpdate() {
+		vRotation = targetVRotation;
+		rotation = targetRotation;
+		distance = targetDistance;
+	}
+
+	private void smothMotionUpdate(float tpf) {
+		targetDir.set(targetLocation).subtractLocal(prevPos);
+		float dist = targetDir.length();
+		lowPassFiltering(dist);
+		rotateCameraByMouse(tpf);
+	}
+
+	private void rotateCameraByMouse(float tpf) {
+		if (canRotate) {
+		    rotate();
+		}
+		if (trailingEnabled && trailing) {
+		    updateCameraTrailing(tpf);
+		}
+
+		if (chasing) {
+		    updateCameraChasing(tpf);
+		}
+		if (zooming) {
+		    updateZoomingCamera(tpf);
+		}
+		
+		if (rotating) {
+		    rotationHorizontal(tpf);
+		}
+		if (vRotating) {
+		    rotationVertical(tpf);
+		}
+	}
+
+	private void rotationVertical(float tpf) {
+		vRotationLerpFactor = Math.min(vRotationLerpFactor + tpf * tpf * rotationSensitivity, 1);
+		vRotation = FastMath.interpolateLinear(vRotationLerpFactor, vRotation, targetVRotation);
+		if (targetVRotation + 0.01f >= vRotation && targetVRotation - 0.01f <= vRotation) {
+		    vRotating = false;
+		    vRotationLerpFactor = 0;
+		}
+	}
+
+	private void rotationHorizontal(float tpf) {
+		rotationLerpFactor = Math.min(rotationLerpFactor + tpf * tpf * rotationSensitivity, 1);
+		rotation = FastMath.interpolateLinear(rotationLerpFactor, rotation, targetRotation);
+		if (targetRotation + 0.01f >= rotation && targetRotation - 0.01f <= rotation) {
+		    rotating = false;
+		    rotationLerpFactor = 0;
+		}
+	}
+
+	private void updateZoomingCamera(float tpf) {
+		distanceLerpFactor = Math.min(distanceLerpFactor + (tpf * tpf * zoomSensitivity), 1);
+		distance = FastMath.interpolateLinear(distanceLerpFactor, distance, targetDistance);
+		if (targetDistance + 0.1f >= distance && targetDistance - 0.1f <= distance) {
+		    zooming = false;
+		    distanceLerpFactor = 0;
+		}
+	}
+
+	private void updateCameraChasing(float tpf) {
+		distance = temp.set(targetLocation).subtractLocal(cam.getLocation()).length();
+		distanceLerpFactor = Math.min(distanceLerpFactor + (tpf * tpf * chasingSensitivity * 0.05f), 1);
+		distance = FastMath.interpolateLinear(distanceLerpFactor, distance, targetDistance);
+		if (targetDistance + 0.01f >= distance && targetDistance - 0.01f <= distance) {
+		    distanceLerpFactor = 0;
+		    chasing = false;
+		}
+	}
+
+	private void updateCameraTrailing(float tpf) {
+		if (targetMoves) {
+		    updateTargetMoves();
+		}
+		trailingLerpFactor = Math.min(trailingLerpFactor + tpf * tpf * trailingSensitivity, 1);
+		rotation = FastMath.interpolateLinear(trailingLerpFactor, rotation, targetRotation);
+
+		//if the rotation is near the target rotation we're good, that's over
+		if (targetRotation + 0.01f >= rotation && targetRotation - 0.01f <= rotation) {
+		    trailing = false;
+		    trailingLerpFactor = 0;
+		}
+	}
+
+	private void updateTargetMoves() {
+		//computation if the inverted direction of the target
+		Vector3f a = targetDir.negate().normalizeLocal();
+		//the x unit vector
+		Vector3f b = Vector3f.UNIT_X;
+		//2d is good enough
+		a.y = 0;
+		//computation of the rotation angle between the x axis and the trail
+		if (targetDir.z > 0) {
+		    targetRotation = FastMath.TWO_PI - FastMath.acos(a.dot(b));
+		} else {
+		    targetRotation = FastMath.acos(a.dot(b));
+		}
+		if (targetRotation - rotation > FastMath.PI || targetRotation - rotation < -FastMath.PI) {
+		    targetRotation -= FastMath.TWO_PI;
+		}
+
+		//if there is an important change in the direction while trailing reset of the lerp factor to avoid jumpy movements
+		if (targetRotation != previousTargetRotation && FastMath.abs(targetRotation - previousTargetRotation) > FastMath.PI / 8) {
+		    trailingLerpFactor = 0;
+		}
+		previousTargetRotation = targetRotation;
+	}
+
+	private void rotate() {
+		
+		trailingLerpFactor = 0;
+		//stop trailing user has the control
+		trailing = false;
+	}
+
+	private void lowPassFiltering(float dist) {
+		if (offsetDistance < dist) {
+		    //target moves, start chasing.
+		    chasing = true;
+		    //target moves, start trailing if it has to.
+		    if (trailingEnabled) {
+		        trailing = true;
+		    }
+		    //target moves...
+		    targetMoves = true;
+		} else {
+		    //if target was moving, we compute a slight offset in rotation to avoid a rought stop of the cam
+		    //We do not if the player is rotationg the cam
+		    if (targetMoves && !canRotate) {
+		        if (targetRotation - rotation > trailingRotationInertia) {
+		            targetRotation = rotation + trailingRotationInertia;
+		        } else if (targetRotation - rotation < -trailingRotationInertia) {
+		            targetRotation = rotation - trailingRotationInertia;
+		        }
+		    }
+		    //Target stops
+		    targetMoves = false;
+		}
+	}
+}
         if (enabled) {
             targetLocation.set(target.getWorldTranslation()).addLocal(lookAtOffset);
             if (smoothMotion) {
@@ -523,7 +679,6 @@ public class ChaseCamera implements ActionListener, AnalogListener, Control, Jme
 
         }
     }
-
     /**
      * Return the enabled/disabled state of the camera
      * @return true if the camera is enabled
